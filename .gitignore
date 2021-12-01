@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Hidden files and folders
+.DS_Store/
+.venv/
