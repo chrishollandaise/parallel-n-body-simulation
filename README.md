@@ -7,7 +7,7 @@ https://docs.cupy.dev/en/stable/install.html
 
 ```text
 git clone https://github.com/chrishollandaise/parallel-n-body-simulation.git
-cd NSAC
+cd parallel-n-body-simulation
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
