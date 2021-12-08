@@ -3,6 +3,12 @@ import sys
 
 # python generate_dummy_output.py {step_count} {particle_count}
 
+# Pickle file output
+
+# steps contains each step as array
+# each step contains each particle
+# each particle contains [x, y, z] elements
+
 def create_dummy_pkl(step_count=100, particle_count=10):
     # Creates matrix of evenly spaced particle [x, y, z] coordinates
     steps = []
