@@ -131,3 +131,4 @@ dmypy.json
 # Hidden files and folders
 .DS_Store/
 .venv/
+out/*
