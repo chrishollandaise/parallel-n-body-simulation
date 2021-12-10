@@ -32,7 +32,7 @@ class MainCanvas(Widget):
         self.inc += 1    
 
     def load(self):
-        self.epochs = pickle.load(open(os.path.join(os.getcwd(), 'profiles/steps_600_particles_30.pkl'), 'rb')) 
+        self.epochs = pickle.load(open(os.path.join(os.getcwd(), 'profiles/1000steps_2_particles_2500spe.pkl'), 'rb')) 
         
 
 class MainApp(App):
