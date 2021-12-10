@@ -14,6 +14,6 @@ class Particle():
         self.r = r
         self.g = g
         self.b = b
-        self.xvelocity = xvel
-        self.yvelocity = yvel
-        self.zvelocity = zvel
+        self.v_x = xvel
+        self.v_y = yvel
+        self.v_z = zvel
