@@ -61,7 +61,17 @@ if __name__ == "__main__":
     #p1 = nbody.Particle( 1 , 0 , 0 , 0 ) # One kg particle
     #earth = nbody.Particle( 6 * 10 ** 24 , 0 , 6.4 * 10 ** 6 , 0 ) # EARTH
     #particles = [ nbody.Particle( 10000 , 250 , 250 , 0 ), nbody.Particle( 1000000 , -125 , -125 , 0 )]
-    particles = [nbody.Particle( 120 , -100 , -100 , 0, xvel=0.0001, yvel=0.0001), nbody.Particle( 120 , 100 , 100 , 0 , xvel=-0.0001, yvel=-0.0001)]
+    import random as rand
+    # Generate 100 random particles between x=0 to 500
+    particles = []
+    for i in range(1_000_000):
+        particles.append(nbody.Particle(x=rand.randint(0, 500), y=rand.randint(0, 500), z=0, mass=rand.randint(10, 500000)))
+
+    # particles = [ nbody.Particle( 10000 , 250 , 250 , 0 ), nbody.Particle( 1000000 , -125 , -125 , 0 )]
+    epochs = []
+    run_simulation(epochs, particles)
+    file = open(f"profiles/{STEPS}steps_{len(particles)}_particles_{TIME_STEP}spe.pkl", 'wb')
+    # particles = [nbody.Particle( 120 , -100 , -100 , 0, xvel=0.0001, yvel=0.0001), nbody.Particle( 120 , 100 , 100 , 0 , xvel=-0.0001, yvel=-0.0001)]
     epochs = []
     run_simulation(epochs, particles)
     output_results(epochs)

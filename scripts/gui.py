@@ -16,7 +16,7 @@ class MainCanvas(Widget):
 
         with self.canvas.before:
             # initialize the ellipses to their first positions
-            self.particles = [Ellipse(size=(40, 40),pos=(nbody[0], nbody[1])) for nbody in self.epochs[0]]
+            self.particles = [Ellipse(size=(10, 10),pos=(nbody[0], nbody[1])) for nbody in self.epochs[0]]
  
         with self.canvas:
             Clock.schedule_interval(self.update, 1.0/60.0)
@@ -26,20 +26,20 @@ class MainCanvas(Widget):
 
         # update the positions of the ellipses
         for idx, particle in enumerate(self.particles):
-            particle.pos = (self.epochs[iter][idx][0], self.epochs[iter][idx][1])
+            particle.pos = (self.epochs[iter][idx][0] + 250, self.epochs[iter][idx][1] + 250)
         
         # next epoch
         self.inc += 1    
 
     def load(self):
-        self.epochs = pickle.load(open(os.path.join(os.getcwd(), 'profiles/1000steps_2_particles_2500spe.pkl'), 'rb')) 
+        self.epochs = pickle.load(open(os.path.join(os.getcwd(), '/Users/chris/parallel-n-body-simulation/profiles/1000steps_2_particles_2500spe.pkl'), 'rb')) 
         
 
 class MainApp(App):
     def build(self):
         Config.set('graphics', 'resizable', False)
-        Config.set('graphics', 'width', '720')
-        Config.set('graphics', 'height', '480')
+        Config.set('graphics', 'width', '500')
+        Config.set('graphics', 'height', '500')
         self.title = 'N-Body Simulator'
 
 def main():
