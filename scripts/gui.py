@@ -125,11 +125,11 @@ class Simulation(Scatter):
         self.loader.start()
 
         # gross increment starting from t0 of application
-        self.INCREMENT = 0
+        self.INCREMENT = 400_000
         # current epoch
         self.CURRENT_EPOCH = 0
         # controls the speed of the simulation
-        self.SPEED = 1
+        self.SPEED = 200
         # controls the particle scalar size
         self.PARTICLE_SIZE = 2.5
         # Controls whether the simulation is paused or not
