@@ -70,14 +70,13 @@ class MainLayout(Widget):
         self.increment_string = ""
         self.HELP_ON = False
         self.HELP_TEXT = '''HELP: 
+                          \n\tf: Move simulation forward   | \tb: Move simulation backward
                           \n\tw: Increase particle size    | \ts: Decrease particle size
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
-                          \n\tr: Reset simulation          | \tq: Quit
-                          \n\tf: Forward simulation        | \tb: Reverse simulation
-                          \n\tSPACE: Pause simulation      | \th: Toggle help
+                          \n\tr: Reset simulation          | \tSPACE: Pause simulation
+                          \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing a epoch number and pressing enter will jump to that epoch.
                           '''
-
         # UI Clock
         self.ui_clock = Clock.schedule_interval(self.update_ui, 1.0/60.0)
     
@@ -142,6 +141,7 @@ class Simulation(Scatter):
         self.INCREMENT = epoch_offset
 
     def reset(self):
+        self.SPEED = 1
         with self.canvas:
             self.canvas.clear()
         
