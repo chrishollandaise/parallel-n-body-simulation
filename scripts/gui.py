@@ -23,8 +23,14 @@ class MainLayout(Widget):
         
         if key is not None and key.isnumeric():
             self.TYPING = True
-            self.sim.toggle_pause()
+            self.sim.PAUSE = True
             self.increment_string += key
+
+            if(int(self.increment_string)) > self.sim.MAX_EPOCH:
+                self.increment_string = str(self.sim.MAX_EPOCH)
+                self.sim.offset_epoch(int(self.increment_string))
+                self.TYPING = False
+
         elif key_code == 42:
             self.increment_string = self.increment_string[:-1]
         elif key_code == 40:
@@ -68,6 +74,7 @@ class MainLayout(Widget):
         self.epochs_label = self.ids.epoch
         self.nbodies_label = self.ids.n_bodies
         self.help_label = self.ids.help
+        self.speed_label = self.ids.speed
 
         # variables
         self.increment_string = ""
@@ -79,7 +86,7 @@ class MainLayout(Widget):
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
                           \n\tr: Reset simulation          | \tSPACE: Pause simulation
                           \n\th: Toggle help               | \tq: Quit      
-                          \nAdditionally, typing a epoch number and pressing enter will jump to that epoch.
+                          \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
                           '''
         # UI Clock
         self.ui_clock = Clock.schedule_interval(self.update_ui, 1.0/60.0)
@@ -94,6 +101,7 @@ class MainLayout(Widget):
             self.epochs_label.text = f"Epoch: N/A"
             self.nbodies_label.text = "N-Bodies: Loading..."
         else:
+            self.speed_label.text = "X" + str(self.sim.SPEED)
             if self.TYPING:
                 self.epochs_label.text = f"Epoch: {self.increment_string}"
             else:
@@ -128,17 +136,23 @@ class Simulation(Scatter):
         self.INCREMENT = 400_000
         # current epoch
         self.CURRENT_EPOCH = 0
+        # max epoch, will be set when loaded
+        self.MAX_EPOCH = 0
         # controls the speed of the simulation
-        self.SPEED = 200
+        self.SPEED = 1
+        # max speed of the simulation
+        self.MAX_SPEED = 256
         # controls the particle scalar size
         self.PARTICLE_SIZE = 2.5
         # Controls whether the simulation is paused or not
         self.PAUSE = True
         # Controls whether the simulation has loaded the epochs or not
         self.LOADED = False
+        # FPS
+        self.FPS = 60.0
             
         with self.canvas:
-            Clock.schedule_interval(self.update, 1.0/60.0)
+            self.sim_clock = Clock.schedule_interval(self.update, 1.0/self.FPS)
 
     def update(self, dt):
         if self.LOADED:
@@ -149,6 +163,7 @@ class Simulation(Scatter):
 
     def reset(self):
         self.SPEED = 1
+
         with self.canvas:
             self.canvas.clear()
         
@@ -168,12 +183,13 @@ class Simulation(Scatter):
         self.SPEED = abs(self.SPEED)
     
     def increase(self):
-        self.SPEED *= 2
+        if self.SPEED < self.MAX_SPEED:
+            self.SPEED *= 2
     
     def decrease(self):
         if self.SPEED > 1:
             self.SPEED //= 2
-
+            
     def simulate(self):
         self.CURRENT_EPOCH = self.INCREMENT % len(self.epochs)
 
@@ -204,6 +220,7 @@ class Simulation(Scatter):
         # draw the starting positions of the particles
         self.draw_initial_state()
         self.LOADED = True
+        self.MAX_EPOCH = len(self.epochs) - 1
 
     def draw_initial_state(self): 
          with self.canvas:
