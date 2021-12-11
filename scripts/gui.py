@@ -22,6 +22,8 @@ class MainLayout(Widget):
         key_code, key = args[2], args[3]
         
         if key is not None and key.isnumeric():
+            self.TYPING = True
+            self.sim.toggle_pause()
             self.increment_string += key
         elif key_code == 42:
             self.increment_string = self.increment_string[:-1]
@@ -31,6 +33,7 @@ class MainLayout(Widget):
             self.sim.PAUSE = True
             self.sim.offset_epoch(int(self.increment_string))
             self.increment_string = ""
+            self.TYPING = False
         if key == 'w':
             self.sim.PARTICLE_SIZE += 1
         elif key == 's':
@@ -68,6 +71,7 @@ class MainLayout(Widget):
 
         # variables
         self.increment_string = ""
+        self.TYPING = False
         self.HELP_ON = False
         self.HELP_TEXT = '''HELP: 
                           \n\tw: Increase particle size    | \ts: Decrease particle size
@@ -91,8 +95,11 @@ class MainLayout(Widget):
             self.epochs_label.text = f"Epoch: N/A"
             self.nbodies_label.text = "N-Bodies: Loading..."
         else:
-            self.epochs_label.text = f"Epoch: {self.sim.CURRENT_EPOCH}"
-            self.nbodies_label.text = f"N-Bodies: {len(self.sim.epochs[0])}"
+            if self.TYPING:
+                self.epochs_label.text = f"Epoch: {self.increment_string}"
+            else:
+                self.epochs_label.text = f"Epoch: {self.sim.CURRENT_EPOCH}"
+                self.nbodies_label.text = f"N-Bodies: {len(self.sim.epochs[0])}"
 
 class Simulation(Scatter):
     def on_touch_down(self, touch):
@@ -198,7 +205,7 @@ class Simulation(Scatter):
         self.draw_initial_state()
         self.LOADED = True
 
-    def draw_initial_state(self):
+    def draw_initial_state(self): 
          with self.canvas:
             self.particles = [Ellipse(size=(self.PARTICLE_SIZE, self.PARTICLE_SIZE),pos=(nbody[0], nbody[1])) for nbody in self.epochs[0]]
     
