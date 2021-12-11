@@ -129,8 +129,8 @@ dmypy.json
 .pyre/
 
 # Hidden files and folders
-.DS_Store/
+.DS_Store
 .venv/
 out/*
 __pycache__/
-profiles/
+profiles/*
