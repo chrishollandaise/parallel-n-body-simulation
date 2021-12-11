@@ -2,11 +2,11 @@ import nbody
 import pickle as pkl
 from math import sqrt
 
-G_MULTIPLIER = 100_000
+G_MULTIPLIER = 1 * 10 ** 8
 G = 6.6743 * 10 ** -11 * G_MULTIPLIER# m^3/(kg*s^2)
 TIME_STEP = 0.1
-STEPS = 1_000_000
-DECAY_RATE = 0.99
+STEPS = 80000
+DECAY_RATE = 0.999
 # Force of gravity = (G * M * m) / d^2
 # G = 6.6743 * 10^-11 newton square meter kg^-2
 g_force = lambda p1, p2: ( ( p2.mass * p1.mass ) / (dist( p1, p2 ) ** 2) ) * G
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # for i in range(1_000_000):
     #    particles.append(nbody.Particle(x=rand.randint(0, 500), y=rand.randint(0, 500), z=0, mass=rand.randint(10, 500000)))
 
-    particles = [ nbody.Particle( 10_000_000_000, 1000 , 0 , 0 , yvel=-99 ), nbody.Particle( 10_000_000_000 , -1000 , 0 , 0 , yvel=99 )]
+    particles = [ nbody.Particle( 100_000, 100 , 0 , 0 , yvel=-2 ), nbody.Particle( 100_000 , -100 , 0 , 0 , yvel=2 )]
     epochs = []
     #run_simulation(epochs, particles)
     #file = open(f"{STEPS}steps_{len(particles)}_particles_{TIME_STEP}spe.pkl", 'wb')
