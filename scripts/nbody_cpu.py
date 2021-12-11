@@ -54,19 +54,19 @@ def output_results(epochs):
     pkl.dump(epochs, file)
 
 if __name__ == "__main__":
-    # import random as rand
+    import random as rand
     # Generate 100 random particles between x=0 to 500
-    # particles = []
-    # for i in range(1_000_000):
-    #    particles.append(nbody.Particle(x=rand.randint(0, 500), y=rand.randint(0, 500), z=0, mass=rand.randint(10, 500000)))
+    particles = []
+    for i in range(100):
+       particles.append(nbody.Particle(x=rand.randint(-1000, 1000), y=rand.randint(-1000, 1000), z=0, mass=100_000))
 
-    particles = [ nbody.Particle( 100_000, 100 , 0 , 0 , yvel=-2 ), nbody.Particle( 100_000 , -100 , 0 , 0 , yvel=2 )]
+    # particles = [ nbody.Particle( 100_000, 100 , 0 , 0 , yvel=-2 ), nbody.Particle( 100_000 , -100 , 0 , 0 , yvel=2 )]
     epochs = []
     #run_simulation(epochs, particles)
     #file = open(f"{STEPS}steps_{len(particles)}_particles_{TIME_STEP}spe.pkl", 'wb')
     # particles = [nbody.Particle( 120 , -100 , -100 , 0, xvel=0.0001, yvel=0.0001), nbody.Particle( 120 , 100 , 100 , 0 , xvel=-0.0001, yvel=-0.0001)]
     run_simulation(epochs, particles)
-    #output_results(epochs)
+    output_results(epochs)
     
     print(f"\nTime Step: {TIME_STEP}")
     print(f"Epochs: {STEPS}")

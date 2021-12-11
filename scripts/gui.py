@@ -11,6 +11,7 @@ from kivy.uix.scatter import Scatter
 from kivy.uix.widget import Widget
 from kivy.graphics import Ellipse
 from kivy.clock import Clock
+from kivy.lang.builder import Builder
 
 import pickle
 import os
@@ -18,13 +19,29 @@ import threading
 
 class MainLayout(Widget):
     def _on_keyboard_down(self, *args):
-        key = args[3]
+        key_code, key = args[2], args[3]
         
+        if key is not None and key.isnumeric():
+            self.increment_string += key
+        elif key_code == 42:
+            self.increment_string = self.increment_string[:-1]
+        elif key_code == 40:
+            if len(self.increment_string) <= 0:
+                return
+            self.sim.PAUSE = True
+            self.sim.offset_epoch(int(self.increment_string))
+            self.increment_string = ""
         if key == 'w':
             self.sim.PARTICLE_SIZE += 1
         elif key == 's':
             if self.sim.PARTICLE_SIZE > 1:
                 self.sim.PARTICLE_SIZE -= 1
+        elif key == 'd':
+            self.sim.increase()
+        elif key == 'h':
+            self.toggle_help()
+        elif key == 'a':
+            self.sim.decrease()
         elif key == 'q':
             self.app.stop()
         elif key == ' ':
@@ -47,12 +64,30 @@ class MainLayout(Widget):
         self.sim = self.ids.sim
         self.epochs_label = self.ids.epoch
         self.nbodies_label = self.ids.n_bodies
+        self.help_label = self.ids.help
+
+        # variables
+        self.increment_string = ""
+        self.HELP_ON = False
+        self.HELP_TEXT = '''HELP: 
+                          \n\tw: Increase particle size    | \ts: Decrease particle size
+                          \n\td: Increase simulation speed | \ta: Decrease simulation speed
+                          \n\tr: Reset simulation          | \tq: Quit
+                          \n\tf: Forward simulation        | \tb: Reverse simulation
+                          \n\tSPACE: Pause simulation      | \th: Toggle help
+                          \nAdditionally, typing a epoch number and pressing enter will jump to that epoch.
+                          '''
 
         # UI Clock
         self.ui_clock = Clock.schedule_interval(self.update_ui, 1.0/60.0)
+    
+    def toggle_help(self):
+        self.HELP_ON = not self.HELP_ON
+        self.help_label.color = [0, 1, 0, int(self.HELP_ON)]
+        self.help_label.text = "" if not self.HELP_ON else self.HELP_TEXT
 
     def update_ui(self, dt):
-        if self.sim.loader.is_alive():
+        if not self.sim.LOADED:
             self.epochs_label.text = f"Epoch: N/A"
             self.nbodies_label.text = "N-Bodies: Loading..."
         else:
@@ -76,6 +111,9 @@ class Simulation(Scatter):
     def __init__(self, **kwargs):
         super(Simulation, self).__init__(**kwargs)
 
+        # path to the pickle file
+        self.path = self.get_chosen_profile()
+
         # load the epochs from the pickle file
         self.loader = threading.Thread(target=self.load)
         self.loader.start()
@@ -97,9 +135,12 @@ class Simulation(Scatter):
             Clock.schedule_interval(self.update, 1.0/60.0)
 
     def update(self, dt):
-        if not self.loader.is_alive():
+        if self.LOADED:
             self.simulate()
     
+    def offset_epoch(self, epoch_offset):
+        self.INCREMENT = epoch_offset
+
     def reset(self):
         with self.canvas:
             self.canvas.clear()
@@ -117,7 +158,14 @@ class Simulation(Scatter):
         self.SPEED *= -1
     
     def forward(self):
-        self.SPEED = 1
+        self.SPEED = abs(self.SPEED)
+    
+    def increase(self):
+        self.SPEED *= 2
+    
+    def decrease(self):
+        if self.SPEED > 1:
+            self.SPEED //= 2
 
     def simulate(self):
         self.CURRENT_EPOCH = self.INCREMENT % len(self.epochs)
@@ -131,9 +179,21 @@ class Simulation(Scatter):
         if not self.PAUSE:
             self.INCREMENT += self.SPEED
 
+    def get_chosen_profile(self):
+        path = os.path.join(os.getcwd(), 'profiles')
+        profiles = os.listdir(path)
+        
+        for idx, profile in enumerate(profiles):
+            if profile.endswith('.pkl'):
+                print(f"{idx}: {profile}")
+                
+        choice = int(input("Choose a profile: "))
+
+        return os.path.join(path, profiles[choice])
+
     def load(self):
         # load the epochs from the pickle file
-        self.epochs = pickle.load(open(os.path.join(os.getcwd(), r'/Users/chris/parallel-n-body-simulation/profiles/1000steps_100_particles_2500spe.pkl'), 'rb'))
+        self.epochs = pickle.load(open(self.path, 'rb'))
         # draw the starting positions of the particles
         self.draw_initial_state()
         self.LOADED = True
@@ -142,7 +202,6 @@ class Simulation(Scatter):
          with self.canvas:
             self.particles = [Ellipse(size=(self.PARTICLE_SIZE, self.PARTICLE_SIZE),pos=(nbody[0], nbody[1])) for nbody in self.epochs[0]]
     
-
     def toggle_pause(self):
         self.PAUSE = not self.PAUSE
 
@@ -150,7 +209,8 @@ class MainApp(App):
     def build(self):
         # Layout
         self.title = 'N-Body Simulator'
-        
+        Builder.load_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gui.kv'))
+
         return MainLayout(self)
 
 if __name__ == '__main__':
