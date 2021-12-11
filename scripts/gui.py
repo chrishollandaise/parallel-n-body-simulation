@@ -88,13 +88,14 @@ class MainLayout(Widget):
                           \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
                           '''
+        self.help_label.text = self.HELP_TEXT
         # UI Clock
         self.ui_clock = Clock.schedule_interval(self.update_ui, 1.0/60.0)
     
     def toggle_help(self):
+        print(self.help_label.color)
         self.HELP_ON = not self.HELP_ON
         self.help_label.color = [0, 1, 0, int(self.HELP_ON)]
-        self.help_label.text = "" if not self.HELP_ON else self.HELP_TEXT
 
     def update_ui(self, dt):
         if not self.sim.LOADED:
