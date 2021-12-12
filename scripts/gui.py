@@ -16,6 +16,7 @@ from kivy.lang.builder import Builder
 import pickle
 import os
 import threading
+import sys
 
 class MainLayout(Widget):
     def _on_keyboard_down(self, *args):
@@ -45,6 +46,8 @@ class MainLayout(Widget):
         elif key == 's':
             if self.sim.PARTICLE_SIZE > 1:
                 self.sim.PARTICLE_SIZE -= 1
+        elif key == 'v':
+            self.record_video()
         elif key == 'd':
             self.sim.increase()
         elif key == 'h':
@@ -108,6 +111,9 @@ class MainLayout(Widget):
             else:
                 self.epochs_label.text = f"Epoch: {self.sim.CURRENT_EPOCH}"
                 self.nbodies_label.text = f"N-Bodies: {len(self.sim.epochs[0])}"
+    
+    def record_video(self):
+        Window.screenshot(name='screenshot.png')
 
 class Simulation(Scatter):
     def on_touch_down(self, touch):
@@ -118,6 +124,10 @@ class Simulation(Scatter):
                 self.scale = self.scale * 0.9
         else:
             super(Simulation, self).on_touch_down(touch)
+        
+        # print(self.scale)
+        # print((self.ebbox[1][1]))
+        # print(((self.ebbox[1][1] // self.scale )))
     
     def on_touch_move(self, touch):
         # Disable the default touch handler
@@ -128,13 +138,15 @@ class Simulation(Scatter):
 
         # path to the pickle file
         self.path = self.get_chosen_profile()
-
+        # bounding box of the simulation
+        self.ebbox = self.bbox
+        # particles in the simulation
+        self.particles = []
         # load the epochs from the pickle file
         self.loader = threading.Thread(target=self.load)
         self.loader.start()
-
         # gross increment starting from t0 of application
-        self.INCREMENT = 400_000
+        self.INCREMENT = 0
         # current epoch
         self.CURRENT_EPOCH = 0
         # max epoch, will be set when loaded
@@ -142,7 +154,7 @@ class Simulation(Scatter):
         # controls the speed of the simulation
         self.SPEED = 1
         # max speed of the simulation
-        self.MAX_SPEED = 4096
+        self.MAX_SPEED = 16384
         # controls the particle scalar size
         self.PARTICLE_SIZE = 2.5
         # Controls whether the simulation is paused or not
@@ -158,6 +170,7 @@ class Simulation(Scatter):
     def update(self, dt):
         if self.LOADED:
             self.simulate()
+
     
     def offset_epoch(self, epoch_offset):
         self.INCREMENT = epoch_offset
@@ -193,11 +206,13 @@ class Simulation(Scatter):
             
     def simulate(self):
         self.CURRENT_EPOCH = self.INCREMENT % len(self.epochs)
-
-        for idx, particle in enumerate(self.particles):
-                particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
-                if not self.PAUSE:
-                    particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
+        
+        with self.canvas:
+            for idx, particle in enumerate(self.particles):
+                    particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
+                    if not self.PAUSE:
+                        particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
+                    
                 
             # next epoch
         if not self.PAUSE:
@@ -224,9 +239,10 @@ class Simulation(Scatter):
         self.MAX_EPOCH = len(self.epochs) - 1
 
     def draw_initial_state(self): 
-         with self.canvas:
-            self.particles = [Ellipse(size=(self.PARTICLE_SIZE, self.PARTICLE_SIZE),pos=(nbody[0], nbody[1])) for nbody in self.epochs[0]]
-    
+        with self.canvas:
+            for nbody in self.epochs[0]:
+                self.particles.append(Ellipse(size=(self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale),pos=(nbody[0] + (self.height / 2), nbody[1] + (self.width / 2))))
+                
     def toggle_pause(self):
         self.PAUSE = not self.PAUSE
 
