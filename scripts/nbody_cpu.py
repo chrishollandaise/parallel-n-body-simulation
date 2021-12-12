@@ -1,12 +1,13 @@
 import nbody
 import pickle as pkl
 from math import sqrt
+from tqdm import tqdm
 
-G_MULTIPLIER = 1 * 10 ** 8
+G_MULTIPLIER = 1
 G = 6.6743 * 10 ** -11 * G_MULTIPLIER# m^3/(kg*s^2)
-TIME_STEP = 0.1
-STEPS = 80000
-DECAY_RATE = 0.999
+TIME_STEP = 1
+STEPS = 31536000
+DECAY_RATE = 1
 # Force of gravity = (G * M * m) / d^2
 # G = 6.6743 * 10^-11 newton square meter kg^-2
 g_force = lambda p1, p2: ( ( p2.mass * p1.mass ) / (dist( p1, p2 ) ** 2) ) * G
@@ -38,7 +39,7 @@ def update_pos(p):
     p.z += p.v_z * TIME_STEP
 
 def run_simulation(epochs, particles):
-    for epoch in range(STEPS):
+    for epoch in tqdm(range(STEPS)):
         epochs.append([])
         for p1 in particles:
             for p2 in particles:
@@ -47,19 +48,19 @@ def run_simulation(epochs, particles):
         for p in particles:
             update_pos(p)
             epochs[epoch].append( [ p.x , p.y , p.z ] )
-        print(f"{epoch} | {particles[0].x} {particles[0].y} | {particles[1].x} {particles[1].y}")
+        #print(f"{epoch} | {particles[0].x} {particles[0].y} | {particles[1].x} {particles[1].y}")
 
 def output_results(epochs):
-    file = open(f"{STEPS}steps_{len(particles)}_particles_{TIME_STEP}spe.pkl", 'wb')
+    file = open(f"profiles/{STEPS}steps_{len(particles)}_particles_{TIME_STEP}spe.pkl", 'wb')
     pkl.dump(epochs, file)
 
 if __name__ == "__main__":
     import random as rand
     # Generate 100 random particles between x=0 to 500
     particles = []
-    for i in range(100):
-       particles.append(nbody.Particle(x=rand.randint(-1000, 1000), y=rand.randint(-1000, 1000), z=0, mass=100_000))
-
+    #for i in range(100):
+    #   particles.append(nbody.Particle(x=rand.randint(-1000, 1000), y=rand.randint(-1000, 1000), z=0, mass=100_000))
+    particles = [ nbody.Particle( 1.989 * 10 ** 30 , 0, 0, 0 ) , nbody.Particle( 5.972 * 10 ** 24 , 149_600_000_000 , 0 , 0, 0, yvel=30_000 )]
     # particles = [ nbody.Particle( 100_000, 100 , 0 , 0 , yvel=-2 ), nbody.Particle( 100_000 , -100 , 0 , 0 , yvel=2 )]
     epochs = []
     #run_simulation(epochs, particles)
