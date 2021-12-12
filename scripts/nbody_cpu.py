@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 G_MULTIPLIER = 1
 G = 6.6743 * 10 ** -11 * G_MULTIPLIER# m^3/(kg*s^2)
-TIME_STEP = 1
-STEPS = 31536000
+TIME_STEP = 10
+STEPS = 3153600
 DECAY_RATE = 1
 # Force of gravity = (G * M * m) / d^2
 # G = 6.6743 * 10^-11 newton square meter kg^-2
@@ -33,7 +33,7 @@ def update_velocity(p1, p2):
     p1.v_y = p1.v_y * DECAY_RATE + ( f_y / p1.mass ) * TIME_STEP
     p1.v_z = p1.v_z * DECAY_RATE + ( f_z / p1.mass ) * TIME_STEP
 
-def update_pos(p): 
+def update_pos(p):
     p.x += p.v_x * TIME_STEP
     p.y += p.v_y * TIME_STEP
     p.z += p.v_z * TIME_STEP
@@ -60,7 +60,10 @@ if __name__ == "__main__":
     particles = []
     #for i in range(100):
     #   particles.append(nbody.Particle(x=rand.randint(-1000, 1000), y=rand.randint(-1000, 1000), z=0, mass=100_000))
-    particles = [ nbody.Particle( 1.989 * 10 ** 30 , 0, 0, 0 ) , nbody.Particle( 5.972 * 10 ** 24 , 149_600_000_000 , 0 , 0, 0, yvel=30_000 )]
+    sun = nbody.Particle( 1.989 * 10 ** 30 , 0 , 0 , 0 )
+    earth = nbody.Particle( 5.972 * 10 ** 24 , 149_600_000_000 , 0 , 0 , 0 , yvel = 30_000 )
+    moon = nbody.Particle( 7.35 * 10 ** 22 , 149_600_000_000 + 384_400_000 , 0 , 0 , yvel = 31_023 )
+    particles = [ sun , earth , moon ]
     # particles = [ nbody.Particle( 100_000, 100 , 0 , 0 , yvel=-2 ), nbody.Particle( 100_000 , -100 , 0 , 0 , yvel=2 )]
     epochs = []
     #run_simulation(epochs, particles)
