@@ -142,7 +142,7 @@ class Simulation(Scatter):
         # controls the speed of the simulation
         self.SPEED = 1
         # max speed of the simulation
-        self.MAX_SPEED = 256
+        self.MAX_SPEED = 4096
         # controls the particle scalar size
         self.PARTICLE_SIZE = 2.5
         # Controls whether the simulation is paused or not
