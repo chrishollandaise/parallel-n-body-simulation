@@ -184,11 +184,11 @@ class Simulation(Scatter):
         self.SPEED = abs(self.SPEED)
     
     def increase(self):
-        if self.SPEED < self.MAX_SPEED:
+        if abs(self.SPEED) < self.MAX_SPEED:
             self.SPEED *= 2
     
     def decrease(self):
-        if self.SPEED > 1:
+        if abs(self.SPEED) > 1:
             self.SPEED //= 2
             
     def simulate(self):
