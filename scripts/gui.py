@@ -16,7 +16,8 @@ from kivy.lang.builder import Builder
 import pickle
 import os
 import threading
-import sys
+import time
+import subprocess
 
 class MainLayout(Widget):
     def _on_keyboard_down(self, *args):
@@ -47,7 +48,9 @@ class MainLayout(Widget):
             if self.sim.PARTICLE_SIZE > 1:
                 self.sim.PARTICLE_SIZE -= 1
         elif key == 'v':
-            self.record_video()
+            self.toggle_record_video()
+        elif key == 'p':
+            Window.screenshot(name=os.path.join(os.getcwd(), 'out', f'SCREENSHOT_{time.strftime("%Y-%m-%d_%H-%M-%S")}.png'))
         elif key == 'd':
             self.sim.increase()
         elif key == 'h':
@@ -88,15 +91,18 @@ class MainLayout(Widget):
                           \n\tw: Increase particle size    | \ts: Decrease particle size
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
                           \n\tr: Reset simulation          | \tSPACE: Pause simulation
+                          \n\tv: Record video (toggle)     | \tp: Take screenshot
                           \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
                           '''
         self.help_label.text = self.HELP_TEXT
+        self.RECORD_ON = False
+
         # UI Clock
         self.ui_clock = Clock.schedule_interval(self.update_ui, 1.0/60.0)
+        self.record_clock = None
     
     def toggle_help(self):
-        print(self.help_label.color)
         self.HELP_ON = not self.HELP_ON
         self.help_label.color = [0, 1, 0, int(self.HELP_ON)]
 
@@ -112,8 +118,41 @@ class MainLayout(Widget):
                 self.epochs_label.text = f"Epoch: {self.sim.CURRENT_EPOCH}"
                 self.nbodies_label.text = f"N-Bodies: {len(self.sim.epochs[0])}"
     
+    def toggle_record_video(self):
+        self.RECORD_ON = not self.RECORD_ON
+
+        if self.RECORD_ON :
+            self.record_video()
+        elif not self.RECORD_ON and self.record_clock is not None:
+            self.record_clock.cancel()
+            self.record_clock = None
+            self.save_to_video()
+            threading.Thread(target=self.clean_output).start()
+            
+
+    def clean_output(self):
+        for file in os.listdir(os.path.join(os.getcwd(), 'out')):
+            if file.startswith('sim_'):
+                os.remove(os.path.join(os.getcwd(), 'out', file))
+            
+    def save_to_video(self):
+        path = os.path.join(os.getcwd(), 'out')
+        filename = f'VIDEO_{time.strftime("%Y-%m-%d_%H-%M-%S")}.mp4'
+        subprocess.call(['ffmpeg', '-framerate', '15', '-i', f"{os.path.join(path, 'sim_%*')}.png", '-pix_fmt', 'yuv420p', f"{os.path.join(path, filename)}"])
+    
     def record_video(self):
-        Window.screenshot(name='screenshot.png')
+        out_path = os.path.join(os.getcwd(), 'out')
+
+        if not os.path.exists(out_path):
+            os.mkdir(out_path)
+        else:
+            threading.Thread(target=self.clean_output).start()
+
+        self.record_clock = Clock.schedule_interval(self.record_frame, 1.0/15)
+    
+    def record_frame(self, dt):
+        Window.screenshot(name=os.path.join(os.getcwd(), 'out', f'sim_{int(time.time())}.png'))
+    
 
 class Simulation(Scatter):
     def on_touch_down(self, touch):
@@ -125,10 +164,6 @@ class Simulation(Scatter):
         else:
             super(Simulation, self).on_touch_down(touch)
         
-        # print(self.scale)
-        # print((self.ebbox[1][1]))
-        # print(((self.ebbox[1][1] // self.scale )))
-    
     def on_touch_move(self, touch):
         # Disable the default touch handler
         pass
@@ -212,8 +247,7 @@ class Simulation(Scatter):
                     particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
                     if not self.PAUSE:
                         particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
-                    
-                
+    
             # next epoch
         if not self.PAUSE:
             self.INCREMENT += self.SPEED
@@ -251,7 +285,6 @@ class MainApp(App):
         # Layout
         self.title = 'N-Body Simulator'
         Builder.load_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gui.kv'))
-
         return MainLayout(self)
 
 if __name__ == '__main__':

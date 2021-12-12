@@ -134,4 +134,4 @@ dmypy.json
 out/*
 __pycache__/
 profiles/*
-!profiles/.keep
+out/*
