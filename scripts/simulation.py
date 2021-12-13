@@ -40,8 +40,8 @@ class simulation():
         def __init__( self , particles = [] ):
             self.particles = particles
         
-        def add_particle( self , mass , x , y , z , xvel = 0 , yvel = 0 , zvel = 0 ):
-            self.particles.append(simulation.state._particle( mass , x , y , z , xvel , yvel , zvel ))
+        def add_particle( self , mass , x , y , z , xvel = 0.0 , yvel = 0.0 , zvel = 0.0 ):
+            self.particles.append(simulation.state._particle( mass , x , y , z , xvel = 0.0 , yvel = 0.0 , zvel = 0.0 ))
         
         def get_particles( self ):
             return self.particles
@@ -51,7 +51,7 @@ class simulation():
                 print(f"{p.x} , {p.y} , {p.z}" , end= " | ")
 
         class _particle():
-            def __init__( self , mass , x , y , z , xvel = 0 , yvel = 0 , zvel = 0 ):
+            def __init__( self , mass , x , y , z , xvel = 0.0 , yvel = 0.0 , zvel = 0.0 ):
                 self.mass = mass
                 self.x = x
                 self.y = y
