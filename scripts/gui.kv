@@ -9,21 +9,31 @@
 <MainLayout>
     FloatLayout:
         size: root.width, root.height
+        FileChooserListView:
+            id: filechooser
+            size_hint: 1, 1
+            path: 'profiles'
+            filters: ['*.pkl']
+            on_submit: root.sim.load_file(self, filechooser.selection)
+        Image:
+            id: image
+            opacity: root.FILE_CHOOSER_ON
+            size_hint: 1, 1
+
         Simulation:
             id: sim
+            size_hint: 1, 1
         Label:
             id: epoch
             font_name: 'materials/Aquarius-RegularMono.ttf'
             color: 0, 1, 0, 1
             pos_hint: {'x':0, 'y':0.4}
-            text: 'Epochs: ???'
             font_size: '10sp'
         Label:
             id: n_bodies
             font_name: 'materials/Aquarius-RegularMono.ttf'
             color: 0, 1, 0, 1
             pos_hint: {'x':0, 'y':0.37}
-            text: 'N-Bodies: ???'
             font_size: '10sp'
         Label:
             id: help

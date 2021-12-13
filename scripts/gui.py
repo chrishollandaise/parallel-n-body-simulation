@@ -12,6 +12,7 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Ellipse
 from kivy.clock import Clock
 from kivy.lang.builder import Builder
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 import pickle
 import os
@@ -49,7 +50,7 @@ class MainLayout(Widget):
                 self.sim.PARTICLE_SIZE -= 1
         elif key == 'v':
             self.toggle_record_video()
-        elif key == 'p':
+        elif key == 'b':
             Window.screenshot(name=os.path.join(os.getcwd(), 'out', f'SCREENSHOT_{time.strftime("%Y-%m-%d_%H-%M-%S")}.png'))
         elif key == 'd':
             self.sim.increase()
@@ -63,10 +64,16 @@ class MainLayout(Widget):
             self.sim.toggle_pause()
         elif key == 'r':
             self.sim.reset()
-        elif key == 'b':
-            self.sim.reverse()
-        elif key == 'f':
-            self.sim.forward()
+        elif key == 't':
+            self.sim.toggle_playback()
+        elif key == 'i':
+            self.FILE_CHOOSER_ON = not self.FILE_CHOOSER_ON
+
+            if self.FILE_CHOOSER_ON:
+                self.sim.PAUSE = True
+
+            self.file_chooser.opacity = int(not self.file_chooser.opacity)
+            self.file_chooser.disabled = not self.file_chooser.disabled
 
     def __init__(self, app, **kwargs):
         super(MainLayout, self).__init__(**kwargs)
@@ -81,11 +88,13 @@ class MainLayout(Widget):
         self.nbodies_label = self.ids.n_bodies
         self.help_label = self.ids.help
         self.speed_label = self.ids.speed
+        self.file_chooser = self.ids.filechooser
 
         # variables
         self.increment_string = ""
         self.TYPING = False
         self.HELP_ON = False
+        self.FILE_CHOOSER_ON = False
         self.HELP_TEXT = '''HELP: 
                           \n\tf: Move simulation forward   | \tb: Move simulation backward
                           \n\tw: Increase particle size    | \ts: Decrease particle size
@@ -107,10 +116,10 @@ class MainLayout(Widget):
         self.help_label.color = [0, 1, 0, int(self.HELP_ON)]
 
     def update_ui(self, dt):
-        if not self.sim.LOADED:
+        if not self.sim.LOADED and self.sim.path != "":
             self.epochs_label.text = f"Epoch: N/A"
             self.nbodies_label.text = "N-Bodies: Loading..."
-        else:
+        elif self.sim.LOADED:
             self.speed_label.text = "X" + str(self.sim.SPEED)
             if self.TYPING:
                 self.epochs_label.text = f"Epoch: {self.increment_string}"
@@ -129,7 +138,6 @@ class MainLayout(Widget):
             self.save_to_video()
             threading.Thread(target=self.clean_output).start()
             
-
     def clean_output(self):
         for file in os.listdir(os.path.join(os.getcwd(), 'out')):
             if file.startswith('sim_'):
@@ -153,33 +161,25 @@ class MainLayout(Widget):
     def record_frame(self, dt):
         Window.screenshot(name=os.path.join(os.getcwd(), 'out', f'sim_{int(time.time())}.png'))
     
-
 class Simulation(Scatter):
     def on_touch_down(self, touch):
-        if touch.is_mouse_scrolling:
-            if touch.button == 'scrolldown':
-                self.scale = self.scale * 1.1
-            elif touch.button == 'scrollup':
-                self.scale = self.scale * 0.9
-        else:
-            super(Simulation, self).on_touch_down(touch)
-        
-    def on_touch_move(self, touch):
-        # Disable the default touch handler
-        pass
+        if self.LOADED:
+            if touch.is_mouse_scrolling:
+                if touch.button == 'scrolldown':
+                    self.scale = self.scale * 1.1
+                elif touch.button == 'scrollup':
+                    self.scale = self.scale * 0.9
+            else:
+                super(Simulation, self).on_touch_down(touch)
 
     def __init__(self, **kwargs):
         super(Simulation, self).__init__(**kwargs)
-
         # path to the pickle file
-        self.path = self.get_chosen_profile()
-        # bounding box of the simulation
-        self.ebbox = self.bbox
+        self.path = ""
+        # epochs
+        self.epochs = []
         # particles in the simulation
         self.particles = []
-        # load the epochs from the pickle file
-        self.loader = threading.Thread(target=self.load)
-        self.loader.start()
         # gross increment starting from t0 of application
         self.INCREMENT = 0
         # current epoch
@@ -219,17 +219,10 @@ class Simulation(Scatter):
         self.CURRENT_EPOCH = 0 if self.SPEED >= 0 else len(self.epochs) - 1
         self.INCREMENT = self.CURRENT_EPOCH
         
-        if not self.LOADED:
-            self.loader = threading.Thread(target=self.load)
-            self.loader.start()
-        else:
-            self.draw_initial_state()
+        self.draw_initial_state()
     
-    def reverse(self):
+    def toggle_playback(self):
         self.SPEED *= -1
-    
-    def forward(self):
-        self.SPEED = abs(self.SPEED)
     
     def increase(self):
         if abs(self.SPEED) < self.MAX_SPEED:
@@ -246,8 +239,11 @@ class Simulation(Scatter):
             for idx, particle in enumerate(self.particles):
                     particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
                     if not self.PAUSE:
-                        particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
-    
+                        try:
+                            particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, 
+                                            self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
+                        except IndexError:
+                            print(idx)
             # next epoch
         if not self.PAUSE:
             self.INCREMENT += self.SPEED
@@ -265,18 +261,54 @@ class Simulation(Scatter):
         return os.path.join(path, profiles[choice])
 
     def load(self):
+        self.hard_reset()
         # load the epochs from the pickle file
         self.epochs = pickle.load(open(self.path, 'rb'))
+        print(f"Loaded {len(self.epochs)} epochs")
         # draw the starting positions of the particles
         self.draw_initial_state()
+
         self.LOADED = True
+        self.PAUSE = True
         self.MAX_EPOCH = len(self.epochs) - 1
+    
+    def reset(self):
+        self.SPEED = 1
+
+        self.canvas.clear()
+        
+        self.CURRENT_EPOCH = 0 if self.SPEED >= 0 else len(self.epochs) - 1
+        self.INCREMENT = self.CURRENT_EPOCH
+    
+        self.draw_initial_state()
+    
+    def hard_reset(self):
+        self.LOADED = False
+        self.increment = 0
+        self.CURRENT_EPOCH = 0
+        self.MAX_EPOCH = 0
+        self.SPEED = 1
+        self.PARTICLE_SIZE = 2.5
+        self.PAUSE = True
+        self.particles = []
+        self.canvas.clear()
+        
+    def load_file(self, file_chooser, selection):
+        self.LOADED = False
+        self.path = selection[0]
+
+        self.loader = threading.Thread(target=self.load)
+        self.loader.start()
+
+        file_chooser.opacity = 0
+        file_chooser.disabled = True
 
     def draw_initial_state(self): 
+        self.canvas.clear()
+
         with self.canvas:
-            for nbody in self.epochs[0]:
-                self.particles.append(Ellipse(size=(self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale),pos=(nbody[0] + (self.height / 2), nbody[1] + (self.width / 2))))
-                
+            self.particles = [Ellipse(size=(self.PARTICLE_SIZE / self.scale , self.PARTICLE_SIZE / self.scale),pos=(nbody[0] + self.height / 2, nbody[1] + self.height / 2)) for nbody in self.epochs[0]]
+            
     def toggle_pause(self):
         self.PAUSE = not self.PAUSE
 
