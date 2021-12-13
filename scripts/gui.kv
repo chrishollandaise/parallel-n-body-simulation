@@ -16,8 +16,7 @@
             filters: ['*.pkl']
             on_submit: root.sim.load_file(self, filechooser.selection)
         Image:
-            id: image
-            opacity: root.FILE_CHOOSER_ON
+            opacity: 0
             size_hint: 1, 1
 
         Simulation:

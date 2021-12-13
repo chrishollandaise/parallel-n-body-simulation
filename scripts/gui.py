@@ -96,11 +96,11 @@ class MainLayout(Widget):
         self.HELP_ON = False
         self.FILE_CHOOSER_ON = False
         self.HELP_TEXT = '''HELP: 
-                          \n\tf: Move simulation forward   | \tb: Move simulation backward
+                          \n\t: Toggle simulation playback | \ti: Open file chooser menu
                           \n\tw: Increase particle size    | \ts: Decrease particle size
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
                           \n\tr: Reset simulation          | \tSPACE: Pause simulation
-                          \n\tv: Record video (toggle)     | \tp: Take screenshot
+                          \n\tv: Record video (toggle)     | \tb: Take screenshot
                           \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
                           '''
@@ -146,7 +146,7 @@ class MainLayout(Widget):
     def save_to_video(self):
         path = os.path.join(os.getcwd(), 'out')
         filename = f'VIDEO_{time.strftime("%Y-%m-%d_%H-%M-%S")}.mp4'
-        subprocess.call(['ffmpeg', '-framerate', '15', '-i', f"{os.path.join(path, 'sim_%*')}.png", '-pix_fmt', 'yuv420p', f"{os.path.join(path, filename)}"])
+        subprocess.call(['ffmpeg', '-framerate', '60', '-i', f"{os.path.join(path, 'sim_%*')}.png", '-pix_fmt', 'yuv420p', f"{os.path.join(path, filename)}"])
     
     def record_video(self):
         out_path = os.path.join(os.getcwd(), 'out')
@@ -156,7 +156,7 @@ class MainLayout(Widget):
         else:
             threading.Thread(target=self.clean_output).start()
 
-        self.record_clock = Clock.schedule_interval(self.record_frame, 1.0/15)
+        self.record_clock = Clock.schedule_interval(self.record_frame, 1.0/60)
     
     def record_frame(self, dt):
         Window.screenshot(name=os.path.join(os.getcwd(), 'out', f'sim_{int(time.time())}.png'))
