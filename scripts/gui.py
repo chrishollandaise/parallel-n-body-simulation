@@ -12,7 +12,6 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Ellipse
 from kivy.clock import Clock
 from kivy.lang.builder import Builder
-from kivy.uix.screenmanager import ScreenManager, Screen
 
 import pickle
 import os
@@ -67,6 +66,9 @@ class MainLayout(Widget):
         elif key == 't':
             self.sim.toggle_playback()
         elif key == 'i':
+            if not self.sim.LOADED:
+                return
+
             self.FILE_CHOOSER_ON = not self.FILE_CHOOSER_ON
 
             if self.FILE_CHOOSER_ON:
@@ -96,10 +98,10 @@ class MainLayout(Widget):
         self.HELP_ON = False
         self.FILE_CHOOSER_ON = False
         self.HELP_TEXT = '''HELP: 
-                          \n\t: Toggle simulation playback | \ti: Open file chooser menu
+                          \n\tt: Toggle simulation playback| \ti: Open file chooser menu
                           \n\tw: Increase particle size    | \ts: Decrease particle size
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
-                          \n\tr: Reset simulation          | \tSPACE: Pause simulation
+                          \n\tr: Reset simulation          | \t SPACE: Pause simulation
                           \n\tv: Record video (toggle)     | \tb: Take screenshot
                           \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
@@ -239,35 +241,19 @@ class Simulation(Scatter):
             for idx, particle in enumerate(self.particles):
                     particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
                     if not self.PAUSE:
-                        try:
-                            particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, 
-                                            self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
-                        except IndexError:
-                            print(idx)
+                        particle.pos = (self.epochs[self.CURRENT_EPOCH][idx][0] + self.height / 2, 
+                                        self.epochs[self.CURRENT_EPOCH][idx][1] + self.width / 2)
             # next epoch
         if not self.PAUSE:
             self.INCREMENT += self.SPEED
-
-    def get_chosen_profile(self):
-        path = os.path.join(os.getcwd(), 'profiles')
-        profiles = os.listdir(path)
-        
-        for idx, profile in enumerate(profiles):
-            if profile.endswith('.pkl'):
-                print(f"{idx}: {profile}")
-                
-        choice = int(input("Choose a profile: "))
-
-        return os.path.join(path, profiles[choice])
 
     def load(self):
         self.hard_reset()
         # load the epochs from the pickle file
         self.epochs = pickle.load(open(self.path, 'rb'))
-        print(f"Loaded {len(self.epochs)} epochs")
         # draw the starting positions of the particles
-        self.draw_initial_state()
-
+        self.reset()
+        
         self.LOADED = True
         self.PAUSE = True
         self.MAX_EPOCH = len(self.epochs) - 1
@@ -294,6 +280,9 @@ class Simulation(Scatter):
         self.canvas.clear()
         
     def load_file(self, file_chooser, selection):
+        if not selection[0].endswith('.pkl'):
+            return
+            
         self.LOADED = False
         self.path = selection[0]
 
@@ -303,7 +292,7 @@ class Simulation(Scatter):
         file_chooser.opacity = 0
         file_chooser.disabled = True
 
-    def draw_initial_state(self): 
+    def draw_initial_state(self):
         self.canvas.clear()
 
         with self.canvas:
@@ -314,7 +303,6 @@ class Simulation(Scatter):
 
 class MainApp(App):
     def build(self):
-        # Layout
         self.title = 'N-Body Simulator'
         Builder.load_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gui.kv'))
         return MainLayout(self)
