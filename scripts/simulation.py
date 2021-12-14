@@ -33,7 +33,7 @@ class simulation():
         for i, state in enumerate(self.epochs):
             out_data.append( [] )
             for p in state.get_particles():
-                out_data[i].append( [ p.x , p.y , p.z ] )
+                out_data[i].append( [ p.x , p.y ] )
         pkl.dump(out_data, file)
 
     class state():
