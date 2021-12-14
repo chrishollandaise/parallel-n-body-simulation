@@ -4,7 +4,7 @@ import numpy as np
 import copy
 from tqdm import tqdm
 
-def run_simulation(sim, out_dir):
+def run_simulation(sim):
     device = cp.cuda.Device(0)
     device.use()
     kernel_code = Path('nbody_kernel.cu').read_text()

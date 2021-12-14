@@ -1,12 +1,20 @@
 import nbody_cpu
 from simulation import simulation
 import argparse
-import sys
+import time
+
 try:
     import nbody_gpu
     GPU_AVAILABLE = True
 except ImportError:
     GPU_AVAILABLE = False
+
+def timeit(fn, *args):
+    start = time.time()
+    fn(*args)
+    end = time.time()
+
+    return end-start
 
 def _arg_parse():
     parser = argparse.ArgumentParser(description="Run NBody Simulation on either the CPU or GPU")
@@ -36,13 +44,14 @@ def _main():
         raise FileNotFoundError(f"{args.particle_file} not found")
     
     if args.mode == "cpu":
-        nbody_cpu.run_simulation(sim)
+        result = timeit(nbody_cpu.run_simulation, sim)
     elif args.mode == "gpu":
         if not GPU_AVAILABLE:
             raise Exception("CUDA support not available")
-            
-        nbody_gpu.run_simulation(sim, args.out_dir)
-    
+
+        result = timeit(nbody_gpu.run_simulation, sim)
+        
+    print(f"For a given {len(start_env.get_particles())} particles at {args.epochs} epoch(s) and {args.step} step(s) the simulation took {result} seconds")
     sim.output_results(args.out_dir)
 
 if __name__ == "__main__":

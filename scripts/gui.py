@@ -236,7 +236,6 @@ class Simulation(Scatter):
             
     def simulate(self):
         self.CURRENT_EPOCH = self.INCREMENT % len(self.epochs)
-        
         with self.canvas:
             for idx, particle in enumerate(self.particles):
                     particle.size = (self.PARTICLE_SIZE / self.scale, self.PARTICLE_SIZE / self.scale)
