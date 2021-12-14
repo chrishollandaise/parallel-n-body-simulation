@@ -61,25 +61,25 @@ def run_simulation(sim, out_dir):
     update_velocity = kernel.get_function('update_velocity')
     update_position = kernel.get_function('update_position')
 
-    for _ in range(sim.get_epoch_count()):
+    for _ in tqdm(range(sim.get_epoch_count())):
         update_velocity((BLOCKS,), (TPB,), ( d_mass, d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
         device.synchronize()
         update_position((BLOCKS,), (TPB,), ( d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
         device.synchronize()
         new_state = sim.state(copy.deepcopy(sim.get_last_state().get_particles()))
-        '''
-        d_x = d_x.get()
-        d_y = d_y.get()
-        d_z = d_z.get()
-        d_v_x = d_v_x.get()
-        d_v_y = d_v_y.get()
-        d_v_z = d_v_z.get()
-        '''
-        for i, p in tqdm(enumerate(new_state.get_particles())):
-            p.x = d_x[i]
-            p.y = d_y[i]
-            p.z = d_z[i]
-            p.v_x = d_v_x[i]
-            p.v_y = d_v_y[i]
-            p.v_z = d_v_z[i]
+        
+        t_x = d_x.get()
+        t_y = d_y.get()
+        t_z = d_z.get()
+        t_v_x = d_v_x.get()
+        t_v_y = d_v_y.get()
+        t_v_z = d_v_z.get()
+        
+        for i, p in enumerate(new_state.get_particles()):
+            p.x = t_x[i]
+            p.y = t_y[i]
+            p.z = t_z[i]
+            p.v_x = t_v_x[i]
+            p.v_y = t_v_y[i]
+            p.v_z = t_v_z[i]
         sim.add_epoch(new_state)
