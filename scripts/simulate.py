@@ -29,7 +29,7 @@ def _main():
             p = line.strip().split(",")
             for i, ele in enumerate(p):
                 p[i] = float(eval(ele))
-            print(p)
+            #print(p)
             start_env.add_particle(p[0],p[1],p[2],p[3],p[4],p[5],p[6])
         sim.add_epoch(start_env)
     except FileNotFoundError:
@@ -41,7 +41,7 @@ def _main():
         if not GPU_AVAILABLE:
             raise Exception("CUDA support not available")
             
-        nbody_gpu.run_simulation(sim)
+        nbody_gpu.run_simulation(sim, args.out_dir)
     
     sim.output_results(args.out_dir)
 

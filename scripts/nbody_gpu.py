@@ -1,8 +1,10 @@
 from pathlib import Path
 import cupy as cp
 import numpy as np
+import copy
+from tqdm import tqdm
 
-def run_simulation(sim):
+def run_simulation(sim, out_dir):
     device = cp.cuda.Device(0)
     device.use()
     kernel_code = Path('nbody_kernel.cu').read_text()
@@ -23,10 +25,10 @@ def run_simulation(sim):
     #d_mass_point = cp.empty(PARTICLE_COUNT, dtype=cp.int64)
 
     # Create reference
-    d_g = cp.ndarray(1, cp.int64, d_g_pointer)
-    d_time_step = cp.ndarray(1, cp.int64, d_time_step_pointer)
-    d_particle_count = cp.ndarray(1, cp.int64, d_particle_count_pointer)
-    #d_mass = cp.ndarray(PARTICLE_COUNT, cp.int64, d_mass_pointer)
+    d_g = cp.ndarray(1, cp.float64, d_g_pointer)
+    d_time_step = cp.ndarray(1, cp.float64, d_time_step_pointer)
+    d_particle_count = cp.ndarray(1, cp.float64, d_particle_count_pointer)
+    #d_mass = cp.ndarray(PARTICLE_COUNT, cp.float64, d_mass_pointer)
 
     # Set device constant values
     d_g[0] = sim.get_gravity()
@@ -37,7 +39,7 @@ def run_simulation(sim):
     for p in sim.get_last_state().get_particles():
         h_mass.append(p.mass)
     
-    #d_mass = cp.asarray(np.asarray(h_mass),dtype=np.int64)
+    d_mass = cp.asarray(np.asarray(h_mass),dtype=np.float64)
 
     d_x = cp.empty(PARTICLE_COUNT, dtype=np.float64)
     d_y = cp.empty(PARTICLE_COUNT, dtype=np.float64)
@@ -59,7 +61,25 @@ def run_simulation(sim):
     update_velocity = kernel.get_function('update_velocity')
     update_position = kernel.get_function('update_position')
 
-    #update_velocity(BLOCKS, TPB, ( d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
-    # Syncronize
-    #update_position(BLOCKS, TPB, ( d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
-    # Syncronize 
+    for _ in range(sim.get_epoch_count()):
+        update_velocity((BLOCKS,), (TPB,), ( d_mass, d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
+        device.synchronize()
+        update_position((BLOCKS,), (TPB,), ( d_x, d_y, d_z, d_v_x, d_v_y, d_v_z ) )
+        device.synchronize()
+        new_state = sim.state(copy.deepcopy(sim.get_last_state().get_particles()))
+        '''
+        d_x = d_x.get()
+        d_y = d_y.get()
+        d_z = d_z.get()
+        d_v_x = d_v_x.get()
+        d_v_y = d_v_y.get()
+        d_v_z = d_v_z.get()
+        '''
+        for i, p in tqdm(enumerate(new_state.get_particles())):
+            p.x = d_x[i]
+            p.y = d_y[i]
+            p.z = d_z[i]
+            p.v_x = d_v_x[i]
+            p.v_y = d_v_y[i]
+            p.v_z = d_v_z[i]
+        sim.add_epoch(new_state)
