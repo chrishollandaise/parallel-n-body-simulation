@@ -3,14 +3,19 @@ import cupy as cp
 import numpy as np
 import copy
 from tqdm import tqdm
+import re
+import sys
 
 def run_simulation(sim):
     device = cp.cuda.Device(0)
     device.use()
-    kernel_code = Path('nbody_kernel.cu').read_text()
-    kernel = cp.RawModule(code=kernel_code)
+    kernel_code = Path('nbody_kernel').read_text()
 
     PARTICLE_COUNT = len(sim.get_last_state().get_particles())
+
+    # Set M_SIZE
+    k_code = re.sub(r'(?<=PARTICLE_COUNT\s)\d+', str(PARTICLE_COUNT), kernel_code)
+    kernel = cp.RawModule(code=k_code)
 
     TPB = 32
     BLOCKS = (PARTICLE_COUNT // TPB)
