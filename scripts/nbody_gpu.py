@@ -13,7 +13,7 @@ def run_simulation(sim):
 
     PARTICLE_COUNT = len(sim.get_last_state().get_particles())
 
-    # Set M_SIZE
+    # Set mass size
     k_code = re.sub(r'(?<=PARTICLE_COUNT\s)\d+', str(PARTICLE_COUNT), kernel_code)
     kernel = cp.RawModule(code=k_code)
 
