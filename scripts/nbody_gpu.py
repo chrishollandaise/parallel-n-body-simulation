@@ -9,7 +9,7 @@ import sys
 def run_simulation(sim):
     device = cp.cuda.Device(0)
     device.use()
-    kernel_code = Path('nbody_kernel').read_text()
+    kernel_code = Path('nbody_kernel.cu').read_text()
 
     PARTICLE_COUNT = len(sim.get_last_state().get_particles())
 
