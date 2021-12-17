@@ -134,5 +134,6 @@ dmypy.json
 out/*
 __pycache__/
 profiles/*
+!profiles/README.md
 out/*
 .vscode/

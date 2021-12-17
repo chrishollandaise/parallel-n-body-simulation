@@ -101,7 +101,7 @@ class MainLayout(Widget):
                           \n\tt: Toggle simulation playback| \ti: Open file chooser menu
                           \n\tw: Increase particle size    | \ts: Decrease particle size
                           \n\td: Increase simulation speed | \ta: Decrease simulation speed
-                          \n\tr: Reset simulation          | \t SPACE: Pause simulation
+                          \n\tr: Reset simulation          | \tSPACE: Pause simulation
                           \n\tv: Record video (toggle)     | \tb: Take screenshot
                           \n\th: Toggle help               | \tq: Quit      
                           \nAdditionally, typing an epoch number and pressing enter will jump to that epoch.
@@ -303,6 +303,7 @@ class Simulation(Scatter):
 class MainApp(App):
     def build(self):
         self.title = 'N-Body Simulator'
+        self.icon = os.path.join(os.getcwd(), 'materials/icon.png')
         Builder.load_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gui.kv'))
         return MainLayout(self)
 
