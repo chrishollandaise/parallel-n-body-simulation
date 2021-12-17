@@ -1,4 +1,6 @@
-# parallel-n-body-simulation
+![logo](materials/the_incredible_simulator.png)
+ ---  ---
+![help menu on simulator application](materials/demo_screenshot.png)
 
 ## About
 N-body computations involve simulating dynamic systems of particles under the influence of some physical force. Such forces can be gravity, electrostatics, or magnetism. N-body simulations can also be used for natural formations such as boids. This sort of computation requires a good deal of computational resources. For example, such simulations require billions of particles to accurately represent the interactions between galaxies.
@@ -28,6 +30,10 @@ check out the kivy docs: https://kivy.org/doc/stable/gettingstarted/installation
 ```bash
 python -m pip install kivy[base]
 ```
+
+## Showcase
+
+![earth, sun, moon simulation animation](materials/earth_sun_moon.gif)
 
 ## Additional Information
 We have provided this repo with some particle configurations that can both demonstrate the simulation and visualization of our application.
